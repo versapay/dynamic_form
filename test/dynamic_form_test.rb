@@ -51,6 +51,18 @@ class DynamicFormTest < ActionView::TestCase
 
   def setup_post
     @post = Post.new
+    
+    def Post.human_attribute_name(attr,options = {})
+      case attr.to_s
+      when "author_name"
+        "Author name"
+      when "body"
+        "Body"
+      else
+        []
+      end
+    end
+
     def @post.errors
       Class.new {
         def [](field)

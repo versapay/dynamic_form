@@ -260,7 +260,10 @@ module ActionView
                     attr_errors
                   end
                   
-                  full_message = attr_name != "base" ? "#{attr_name.to_s.humanize} #{msg}" : msg
+                  nice_attr_name = attr_name.to_s.gsub('.', '_').humanize
+                  nice_attr_name = object.class.human_attribute_name(attr_name, :default => attr_name)
+                  
+                  full_message = attr_name != "base" ? "#{nice_attr_name.to_s.humanize} #{msg}" : msg
                   
                   content_tag(:li, full_message)
                 end
