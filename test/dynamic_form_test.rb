@@ -164,7 +164,7 @@ class DynamicFormTest < ActionView::TestCase
     ActionView::Base.field_error_proc = old_proc if old_proc
   end
 
-  def field_with_errors
+  def test_form_with_string
     assert_dom_equal(
       %(<form action="create" method="post" accept-charset="UTF-8"><div style="margin:0;padding:0;display:inline"><input name="_snowman" value="&#9731;" type="hidden" /></div>><p><label for="post_title">Title</label><br /><input id="post_title" name="post[title]" size="30" type="text" value="Hello World" /></p>\n<p><label for="post_body">Body</label><br /><div class="field_with_errors"><textarea cols="40" id="post_body" name="post[body]" rows="20">Back to the hill and over it again!</textarea></div></p><input name="commit" type="submit" value="Create" /></form>),
       form("post")
