@@ -329,6 +329,35 @@ class DynamicFormTest < ActionView::TestCase
     assert_dom_equal %(<div class="errorExplanation" id="errorExplanation"><h2>2 errors prohibited this user from being saved</h2><p>There were problems with the following fields:</p><ul><li>User email can't be empty</li><li>Author name can't be empty</li></ul></div>),
       error
   end
+  
+  def test_error_messages_for_error_display_in_options_hash
+    # setup a post with multiple errors for the auther_name field
+    def @post.errors
+      Class.new {
+        def [](field)
+          case field.to_s
+          when "author_name"
+            ["can't be empty", "too short (minimum is 3 characters)"]
+          when "body"
+            ["can't be empty"]
+          else
+            []
+          end
+        end
+        def empty?() false end
+        def count() 3 end
+        def keys() ["author_name","author_name","body"] end
+        def full_messages() [ "Author name can't be empty", "Author name is too short (minimum is 3 characters)", "Body can't be empty" ] end
+      }.new
+    end
+    
+    # Check that it shows all the errors when options[:error_display] => :first is not set (when either nothing is set or options[:error_display] => :all is set)
+    assert_dom_equal %(<div class="errorExplanation" id="errorExplanation"><h2>3 errors prohibited this post from being saved</h2><p>There were problems with the following fields:</p><ul><li>Author name can't be empty</li><li>Author name is too short (minimum is 3 characters)</li><li>Body can't be empty</li></ul></div>), error_messages_for(@post)
+    
+    # Check that it shows only the first error when options[:error_display] => :first is set
+    assert_dom_equal %(<div class="errorExplanation" id="errorExplanation"><h2>2 errors prohibited this post from being saved</h2><p>There were problems with the following fields:</p><ul><li>Author name can't be empty</li><li>Body can't be empty</li></ul></div>), error_messages_for(@post, :error_display => :first)
+    
+  end
 
   def test_form_with_string_multipart
     assert_dom_equal(

@@ -197,9 +197,33 @@ module ActionView
           object
         end
 
+        
+        only_show_first_error = options.include?(:error_display) and options[:error_display] == :first
+        
         objects.compact!
-        count = objects.inject(0) {|sum, object| sum + object.errors.count }
-
+        
+        count = if only_show_first_error
+          
+          number_of_errors = if objects.present?
+            objects.inject(0) do |sum, object|
+              sum + object.errors.keys.uniq.inject(0) do |sum, key|
+                if key == :base
+                  sum + object.errors[:base].count
+                else
+                  sum + 1
+                end
+              end
+            end
+          else  
+            0
+          end
+          
+          number_of_errors
+          
+        else
+          objects.inject(0) {|sum, object| sum + object.errors.count }
+        end
+        
         unless count.zero?
           html = {}
           [:id, :class].each do |key|
@@ -211,6 +235,7 @@ module ActionView
             end
           end
           options[:object_name] ||= params.first
+          
 
           I18n.with_options :locale => options[:locale], :scope => [:errors, :template] do |locale|
             header_message = if options.include?(:header_message)
@@ -220,10 +245,29 @@ module ActionView
             end
 
             message = options.include?(:message) ? options[:message] : locale.t(:body)
-
+            
             error_messages = objects.sum do |object|
-              object.errors.full_messages.map do |msg|
-                content_tag(:li, msg)
+              if only_show_first_error
+                object.errors.keys.uniq.map do |attr_name|
+                  
+                  next if object.errors[attr_name.to_sym].blank?
+                  
+                  attr_errors = object.errors[attr_name.to_sym]
+                  
+                  msg = if attr_errors.is_a?(Array)
+                    attr_errors.first
+                  else  
+                    attr_errors
+                  end
+                  
+                  full_message = attr_name != "base" ? "#{attr_name.to_s.humanize} #{msg}" : msg
+                  
+                  content_tag(:li, full_message)
+                end
+              else
+                object.errors.full_messages.map do |msg|
+                  content_tag(:li, msg)
+                end
               end
             end.join.html_safe
 
